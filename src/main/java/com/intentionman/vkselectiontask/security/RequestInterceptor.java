@@ -17,6 +17,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RequestInterceptor implements HandlerInterceptor {
     private final AuthService authService;
+    private static final String COMMON_PATH = "https://jsonplaceholder.typicode.com";
     private static final String AUTHORIZATION = "authorization";
     private static final String EMPTY_TOKEN = "";
     private final Set<String> methodsToFilter = Set.of("GET", "POST", "PUT", "PATCH", "DELETE");
@@ -26,14 +27,16 @@ public class RequestInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         try {
             if (shouldFilter(request)) {
-                final String token = getTokenFromRequest(request);
-                Long idFromStorage = authService.userIdFromStorage(token);
-                Long idFromToken = authService.userIdFromToken(token);
-                if (token.equals(EMPTY_TOKEN) || idFromStorage == -1L || !idFromStorage.equals(idFromToken)) {
-                    response.setStatus(401);
-                    return false;
-                }
-                request.setAttribute("userId", idFromToken);
+//                final String token = getTokenFromRequest(request);
+//                Long idFromStorage = authService.userIdFromStorage(token);
+//                Long idFromToken = authService.userIdFromToken(token);
+//                if (token.equals(EMPTY_TOKEN) || idFromStorage == -1L || !idFromStorage.equals(idFromToken)) {
+//                    response.setStatus(401);
+//                    return false;
+//                }
+//                request.setAttribute("userId", idFromToken);
+                String endpoint = request.getServletPath();
+                request.setAttribute("url", COMMON_PATH + endpoint);
             }
             return true;
         } catch (JwtException e) {
