@@ -15,9 +15,10 @@ import java.util.stream.StreamSupport;
 
 @Service
 @AllArgsConstructor
-public class UserServiceImpl {
+public class UserService {
     private final UserRepository userRepository;
     private final UserMapperImpl userMapper;
+
 
     public UserDto save(UserDto userDto) {
         UserEntity userEntity = userMapper.userDtoToEntity(userDto);
@@ -31,7 +32,7 @@ public class UserServiceImpl {
     }
 
     public Optional<UserDto> findByLogin(String login) {
-        Optional<UserEntity> optionalUser = userRepository.findByLogin(login);
+        Optional<UserEntity> optionalUser = userRepository.findByUsername(login);
         return optionalUser.map(userMapper::entityToUserDto);
     }
 
@@ -41,7 +42,7 @@ public class UserServiceImpl {
 
     public boolean isUserExists(UserDto userDto) {
         UserEntity userEntity = userMapper.userDtoToEntity(userDto);
-        Optional<UserEntity> optionalUser = userRepository.findByLogin(userEntity.getLogin());
+        Optional<UserEntity> optionalUser = userRepository.findByUsername(userEntity.getUsername());
         if (optionalUser.isPresent()) {
             UserEntity foundUser = optionalUser.get();
             return MapperConfig.encoder().matches(userEntity.getPassword(), foundUser.getPassword());
@@ -56,7 +57,7 @@ public class UserServiceImpl {
     public UserDto partialUpdate(Long userId, UserDto userDto) {
         userDto.setUserId(userId);
         return userRepository.findById(userId).map(existingUser -> {
-            Optional.ofNullable(userDto.getLogin()).ifPresent(existingUser::setLogin);
+            Optional.ofNullable(userDto.getUsername()).ifPresent(existingUser::setUsername);
             Optional.ofNullable(MapperConfig.encoder().encode(userDto.getPassword())).ifPresent(existingUser::setPassword);
             return userMapper.entityToUserDto(userRepository.save(existingUser));
         }).orElseThrow(() -> new RuntimeException("User doesn't exists"));
@@ -67,6 +68,6 @@ public class UserServiceImpl {
     }
 
     public boolean isLoginAndPasswordValid(UserDto userDto) {
-        return userDto.getLogin().length() >= 6 && userDto.getPassword().length() >= 6;
+        return userDto.getUsername().length() >= 6 && userDto.getPassword().length() >= 6;
     }
 }

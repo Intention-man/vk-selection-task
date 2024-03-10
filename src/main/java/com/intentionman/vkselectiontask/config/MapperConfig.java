@@ -26,4 +26,5 @@ public class MapperConfig {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
+
 }

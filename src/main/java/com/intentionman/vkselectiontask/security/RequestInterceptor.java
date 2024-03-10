@@ -21,7 +21,7 @@ public class RequestInterceptor implements HandlerInterceptor {
     private static final String AUTHORIZATION = "authorization";
     private static final String EMPTY_TOKEN = "";
     private final Set<String> methodsToFilter = Set.of("GET", "POST", "PUT", "PATCH", "DELETE");
-    private final Set<String> filterIgnorePaths = Set.of("/auth/login", "/auth/registration", "/health-check");
+    private final Set<String> filterIgnorePaths = Set.of("/auth/login", "/auth/registration");
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {

@@ -31,11 +31,12 @@ public class JwtProvider {
         final Instant accessExpirationInstant = now.plusMinutes(60).atZone(ZoneId.systemDefault()).toInstant();
         final Date accessExpiration = Date.from(accessExpirationInstant);
         return Jwts.builder()
-                .setSubject(userDto.getLogin())
+                .setSubject(userDto.getUsername())
                 .setExpiration(accessExpiration)
                 .signWith(jwtAccessSecret)
-                .claim("login", userDto.getLogin())
+                .claim("login", userDto.getUsername())
                 .claim("userId", userDto.getUserId())
+                .claim("role", userDto.getRole())
                 .compact();
     }
 }
