@@ -1,8 +1,8 @@
 package com.intentionman.vkselectiontask.services;
 
+import com.intentionman.vkselectiontask.domain.dto.AuthResponse;
 import com.intentionman.vkselectiontask.domain.dto.UserDto;
 import com.intentionman.vkselectiontask.domain.entities.Role;
-import com.intentionman.vkselectiontask.domain.dto.AuthResponse;
 import com.intentionman.vkselectiontask.domain.entities.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;

@@ -1,5 +1,6 @@
 package com.intentionman.vkselectiontask.config;
 
+import com.intentionman.vkselectiontask.security.JwtAuthenticationFilter;
 import com.intentionman.vkselectiontask.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

@@ -28,14 +28,6 @@ public class RequestInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         try {
             if (shouldFilter(request)) {
-//                final String token = getTokenFromRequest(request);
-//                Long idFromStorage = authService.userIdFromStorage(token);
-//                Long idFromToken = authService.userIdFromToken(token);
-//                if (token.equals(EMPTY_TOKEN) || idFromStorage == -1L || !idFromStorage.equals(idFromToken)) {
-//                    response.setStatus(401);
-//                    return false;
-//                }
-//                request.setAttribute("userId", idFromToken);
                 String endpoint = request.getServletPath();
                 request.setAttribute("url", COMMON_PATH + endpoint);
             }
@@ -74,10 +66,4 @@ public class RequestInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    private String getTokenFromRequest(HttpServletRequest request) {
-        final String bearer = request.getHeader(AUTHORIZATION);
-        if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer "))
-            return bearer.substring(7);
-        return EMPTY_TOKEN;
-    }
 }

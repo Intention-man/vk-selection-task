@@ -1,4 +1,4 @@
-package com.intentionman.vkselectiontask.config;
+package com.intentionman.vkselectiontask.security;
 
 import com.intentionman.vkselectiontask.services.JwtService;
 import com.intentionman.vkselectiontask.services.UserService;
