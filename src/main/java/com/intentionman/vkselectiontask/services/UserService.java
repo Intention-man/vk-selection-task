@@ -2,42 +2,89 @@ package com.intentionman.vkselectiontask.services;
 
 
 import com.intentionman.vkselectiontask.config.MapperConfig;
+import com.intentionman.vkselectiontask.domain.entities.Role;
 import com.intentionman.vkselectiontask.domain.dto.UserDto;
 import com.intentionman.vkselectiontask.domain.entities.UserEntity;
 import com.intentionman.vkselectiontask.mappers.UserMapperImpl;
 import com.intentionman.vkselectiontask.repositories.UserRepository;
-import lombok.AllArgsConstructor;
+import com.intentionman.vkselectiontask.security.JwtDecoder;
+import com.intentionman.vkselectiontask.security.JwtProvider;
+import io.jsonwebtoken.Claims;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
-import java.util.stream.StreamSupport;
 
 @Service
-@AllArgsConstructor
-public class UserService {
+@RequiredArgsConstructor
+public class UserService implements UserDetailsService {
+    private final Map<String, Long> tokenStorage = new HashMap<>(); // token -> userId
+    private final JwtProvider jwtProvider;
+    private final JwtDecoder jwtDecoder;
     private final UserRepository userRepository;
     private final UserMapperImpl userMapper;
 
-
-    public UserDto save(UserDto userDto) {
-        UserEntity userEntity = userMapper.userDtoToEntity(userDto);
-        userEntity.setPassword(MapperConfig.encoder().encode(userEntity.getPassword()));
-        return userMapper.entityToUserDto(userRepository.save(userEntity));
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<UserEntity> optionalUser = userRepository.findByUsername(username);
+        if (optionalUser.isPresent()) {
+            return optionalUser.get();
+        } else {
+            return buildDefaultUserDetails();
+        }
     }
 
-    public Optional<UserDto> findById(Long userId) {
-        Optional<UserEntity> optionalUserEntity = userRepository.findById(userId);
-        return optionalUserEntity.map(userMapper::entityToUserDto);
+    public String login(UserDto userDto) {
+        return addTokenForUser(userDto);
+    }
+
+    public String registration(UserDto userDto) {
+        // TODO проверка на валидную роль
+        // TODO как сделать доступ к созданию ROLE_ADMIN ?
+        userDto.setPassword(MapperConfig.encoder().encode(userDto.getPassword()));
+        userRepository.save(userMapper.userDtoToEntity(userDto));
+        return addTokenForUser(userDto);
+    }
+
+    public HttpStatus tryAuth(@NonNull UserDto userCredentials, Optional<UserDto> optionalUser) {
+        if (optionalUser.isEmpty())
+            return HttpStatus.NOT_FOUND;
+        if (MapperConfig.encoder().matches(userCredentials.getPassword(), optionalUser.get().getPassword()))
+            return HttpStatus.OK;
+
+        return HttpStatus.FORBIDDEN;
+    }
+
+    public String addTokenForUser(UserDto foundUser) {
+        final String accessToken = jwtProvider.generateAccessToken(foundUser);
+        tokenStorage.put(accessToken, foundUser.getUserId());
+        return accessToken;
+    }
+
+    public Long userIdFromStorage(String rawToken) {
+        if (tokenStorage.containsKey(rawToken)) {
+            return tokenStorage.get(rawToken);
+        }
+        return -1L;
+    }
+
+    public Long userIdFromToken(String rawToken) {
+        Claims claims = jwtDecoder.decodeToken(rawToken);
+        if (claims != null) return claims.get("userId", Long.class);
+        return null; // if token expired
     }
 
     public Optional<UserDto> findByLogin(String login) {
         Optional<UserEntity> optionalUser = userRepository.findByUsername(login);
         return optionalUser.map(userMapper::entityToUserDto);
-    }
-
-    public boolean isExists(Long userId) {
-        return userRepository.existsById(userId);
     }
 
     public boolean isUserExists(UserDto userDto) {
@@ -50,24 +97,67 @@ public class UserService {
         return false;
     }
 
-    public List<UserDto> findAll() {
-        return StreamSupport.stream(userRepository.findAll().spliterator(), false).map(userMapper::entityToUserDto).toList();
-    }
-
-    public UserDto partialUpdate(Long userId, UserDto userDto) {
-        userDto.setUserId(userId);
-        return userRepository.findById(userId).map(existingUser -> {
-            Optional.ofNullable(userDto.getUsername()).ifPresent(existingUser::setUsername);
-            Optional.ofNullable(MapperConfig.encoder().encode(userDto.getPassword())).ifPresent(existingUser::setPassword);
-            return userMapper.entityToUserDto(userRepository.save(existingUser));
-        }).orElseThrow(() -> new RuntimeException("User doesn't exists"));
-    }
-
-    public void delete(Long userId) {
-        userRepository.deleteById(userId);
-    }
-
     public boolean isLoginAndPasswordValid(UserDto userDto) {
         return userDto.getUsername().length() >= 6 && userDto.getPassword().length() >= 6;
+    }
+
+    public UserDetails buildDefaultUserDetails() {
+        return new UserEntity(0L, "default", "default", Role.ROLE_DEFAULT);
+    }
+
+    /**
+     * Сохранение пользователя
+     *
+     * @return сохраненный пользователь
+     */
+    public UserEntity save(UserEntity user) {
+        return userRepository.save(user);
+    }
+
+
+    /**
+     * Создание пользователя
+     *
+     * @return созданный пользователь
+     */
+    public UserEntity create(UserEntity user) {
+        if (userRepository.existsByUsername(user.getUsername())) {
+            // Заменить на свои исключения
+            throw new RuntimeException("Пользователь с таким именем уже существует");
+        }
+        return save(user);
+    }
+
+    /**
+     * Получение пользователя по имени пользователя
+     *
+     * @return пользователь
+     */
+    public UserEntity getByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
+
+    }
+
+    /**
+     * Получение пользователя по имени пользователя
+     * <p>
+     * Нужен для Spring Security
+     *
+     * @return пользователь
+     */
+    public UserDetailsService userDetailsService() {
+        return this::getByUsername;
+    }
+
+    /**
+     * Получение текущего пользователя
+     *
+     * @return текущий пользователь
+     */
+    public UserEntity getCurrentUser() {
+        // Получение имени пользователя из контекста Spring Security
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return getByUsername(username);
     }
 }

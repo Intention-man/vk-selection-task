@@ -1,7 +1,7 @@
 package com.intentionman.vkselectiontask.security;
 
 
-import com.intentionman.vkselectiontask.services.AuthService;
+import com.intentionman.vkselectiontask.services.UserService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,16 +12,17 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @Component
 @RequiredArgsConstructor
 public class RequestInterceptor implements HandlerInterceptor {
-    private final AuthService authService;
+    private final UserService userService;
     private static final String COMMON_PATH = "https://jsonplaceholder.typicode.com";
     private static final String AUTHORIZATION = "authorization";
     private static final String EMPTY_TOKEN = "";
     private final Set<String> methodsToFilter = Set.of("GET", "POST", "PUT", "PATCH", "DELETE");
-    private final Set<String> filterIgnorePaths = Set.of("/auth/login", "/auth/registration");
+    private final Set<String> filterIgnorePaths = Set.of("/auth/.*");
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -63,7 +64,14 @@ public class RequestInterceptor implements HandlerInterceptor {
 
     private boolean shouldFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return methodsToFilter.contains(request.getMethod().toUpperCase()) && !filterIgnorePaths.contains(path);
+        if (!methodsToFilter.contains(request.getMethod().toUpperCase()))
+            return false;
+        for (String regPath: filterIgnorePaths){
+            if (Pattern.matches(regPath, path)){
+                return false;
+            }
+        }
+        return true;
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {
