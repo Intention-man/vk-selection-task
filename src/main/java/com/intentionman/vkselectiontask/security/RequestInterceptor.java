@@ -1,33 +1,34 @@
 package com.intentionman.vkselectiontask.security;
 
 
-import com.intentionman.vkselectiontask.services.UserService;
+import com.intentionman.vkselectiontask.domain.entities.RequestAudit;
+import com.intentionman.vkselectiontask.repositories.RequestRepositoriy;
+import com.intentionman.vkselectiontask.services.AuditService;
+import com.intentionman.vkselectiontask.services.AuthService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.logging.Logger;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class RequestInterceptor implements HandlerInterceptor {
-    private final UserService userService;
+    private AuditService auditService;
+    private RequestRepositoriy requestRepositoriy;
+    private Logger logger;
     private static final String COMMON_PATH = "https://jsonplaceholder.typicode.com";
-    private static final String AUTHORIZATION = "authorization";
-    private static final String EMPTY_TOKEN = "";
-    private final Set<String> methodsToFilter = Set.of("GET", "POST", "PUT", "PATCH", "DELETE");
-    private final Set<String> filterIgnorePaths = Set.of("/auth/.*");
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        logger.warning("preHandle");
         try {
-            if (shouldFilter(request)) {
+            if (auditService.shouldFilter(request)) {
                 String endpoint = request.getServletPath();
                 request.setAttribute("url", COMMON_PATH + endpoint);
             }
@@ -43,6 +44,7 @@ public class RequestInterceptor implements HandlerInterceptor {
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) {
+        logger.warning("postHandle");
         response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
         response.addHeader("Access-Control-Allow-Credentials", "true");
         response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD");
@@ -51,19 +53,21 @@ public class RequestInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-        // pass
+        logger.warning("afterCompletion");
     }
 
-    private boolean shouldFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-        if (!methodsToFilter.contains(request.getMethod().toUpperCase()))
-            return false;
-        for (String regPath: filterIgnorePaths){
-            if (Pattern.matches(regPath, path)){
-                return false;
-            }
-        }
-        return true;
-    }
-
+//    @Autowired
+//    public void setAuditService(AuditService auditService) {
+//        this.auditService = auditService;
+//    }
+//
+//    @Autowired
+//    public void setRequestRepositoriy(RequestRepositoriy requestRepositoriy) {
+//        this.requestRepositoriy = requestRepositoriy;
+//    }
+//
+//    @Autowired
+//    public void setLogger(Logger logger) {
+//        this.logger = logger;
+//    }
 }

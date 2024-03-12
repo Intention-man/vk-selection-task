@@ -1,16 +1,15 @@
 package com.intentionman.vkselectiontask.services;
 
 
-import com.intentionman.vkselectiontask.config.MapperConfig;
+import com.intentionman.vkselectiontask.config.UtilConfig;
 import com.intentionman.vkselectiontask.domain.dto.UserDto;
 import com.intentionman.vkselectiontask.domain.entities.Role;
 import com.intentionman.vkselectiontask.domain.entities.UserEntity;
 import com.intentionman.vkselectiontask.mappers.UserMapperImpl;
 import com.intentionman.vkselectiontask.repositories.UserRepository;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final UserMapperImpl userMapper;
@@ -37,7 +36,7 @@ public class UserService implements UserDetailsService {
     public HttpStatus tryAuth(@NonNull UserDto userCredentials, Optional<UserDto> optionalUser) {
         if (optionalUser.isEmpty())
             return HttpStatus.NOT_FOUND;
-        if (MapperConfig.encoder().matches(userCredentials.getPassword(), optionalUser.get().getPassword()))
+        if (UtilConfig.encoder().matches(userCredentials.getPassword(), optionalUser.get().getPassword()))
             return HttpStatus.OK;
 
         return HttpStatus.FORBIDDEN;
@@ -48,12 +47,12 @@ public class UserService implements UserDetailsService {
         return optionalUser.map(userMapper::entityToUserDto);
     }
 
-    public boolean isUserExists(UserDto userDto) {
+    public boolean isLoginDataCorrect(UserDto userDto) {
         UserEntity userEntity = userMapper.userDtoToEntity(userDto);
         Optional<UserEntity> optionalUser = userRepository.findByUsername(userEntity.getUsername());
         if (optionalUser.isPresent()) {
             UserEntity foundUser = optionalUser.get();
-            return MapperConfig.encoder().matches(userEntity.getPassword(), foundUser.getPassword());
+            return UtilConfig.encoder().matches(userEntity.getPassword(), foundUser.getPassword());
         }
         return false;
     }
@@ -107,14 +106,4 @@ public class UserService implements UserDetailsService {
         return this::getByUsername;
     }
 
-    /**
-     * Получение текущего пользователя
-     *
-     * @return текущий пользователь
-     */
-    public UserEntity getCurrentUser() {
-        // Получение имени пользователя из контекста Spring Security
-        var username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return getByUsername(username);
-    }
 }

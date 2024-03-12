@@ -5,10 +5,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class VkSelectionTaskApplication {
+	// TODO in-memory-cache
+	//TODO починить swagger, чтобы красиво все открывалось по ссылке http://localhost:8181/api/swagger-ui/index.html
 
 	public static void main(String[] args) {
 		SpringApplication.run(VkSelectionTaskApplication.class, args);
 	}
-	//TODO починить swagger, чтобы красиво все открывалось по ссылке http://localhost:8181/api/swagger-ui/index.html
+
 
 }
