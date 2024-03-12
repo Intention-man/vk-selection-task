@@ -6,6 +6,8 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.util.Date;
+
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Builder
@@ -20,10 +22,9 @@ public class RequestAudit {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    // TODO хранить время не в long
     @Column(name = "created__date", nullable = false, updatable = false)
     @CreatedDate
-    private long createdDate;
+    private Date createdDate;
 
     @Column(name = "created__by")
     @CreatedBy
