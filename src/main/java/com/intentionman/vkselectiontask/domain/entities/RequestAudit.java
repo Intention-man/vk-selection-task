@@ -40,10 +40,6 @@ public class RequestAudit {
     @Column(name = "has_necessary_authority")
     private boolean hasNecessaryAuthority;
 
-    public RequestAudit(String method) {
-        this.method = method;
-    }
-
     public RequestAudit(String method, String path, boolean hasNecessaryAuthority) {
         this.method = method;
         this.path = path;

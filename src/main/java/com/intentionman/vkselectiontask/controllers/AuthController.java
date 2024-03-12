@@ -34,6 +34,11 @@ public class AuthController {
     public ResponseEntity<AuthResponse> registration(@RequestBody UserDto userDto) {
         if (userService.isLoginDataCorrect(userDto))
             return new ResponseEntity<>(HttpStatus.CONFLICT);
-        return new ResponseEntity<>(authService.signUp(userDto), HttpStatus.CREATED);
+
+        AuthResponse authResponse = authService.signUp(userDto);
+        if (authResponse == null)
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+        return new ResponseEntity<>(authResponse, HttpStatus.CREATED);
     }
 }
