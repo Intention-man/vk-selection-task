@@ -26,14 +26,6 @@ public class AuditService {
         return !Role.ROLE_DEFAULT.checkContainsRegPath(path);
     }
 
-    public void saveRequestDataWithoutToken(HttpServletRequest request) {
-        if (checkShouldProxy(request)) {
-            saveRequestData(request, false);
-        } else {
-            saveRequestData(request, true);
-        }
-    }
-
     public void saveRequestData(HttpServletRequest request, boolean hasUserAuthority) {
         requestRepositoriy.save(new RequestAudit(request.getMethod(), request.getServletPath(), hasUserAuthority));
     }

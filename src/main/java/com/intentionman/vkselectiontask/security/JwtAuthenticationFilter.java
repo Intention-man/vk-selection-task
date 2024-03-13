@@ -46,7 +46,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             auditService.saveRequestData(request, !shouldProxy);
             if (shouldProxy){
                 response.setStatus(403);
-                throw new AccessDeniedException("No token");
             } else {
                 canContinue = true;
             }
@@ -78,7 +77,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 auditService.saveRequestData(request, hasUserAuthority);
                 if (!hasUserAuthority){
                     response.setStatus(403);
-                    throw new AccessDeniedException("Incorrect token");
                 } else {
                     canContinue = true;
                 }

@@ -16,7 +16,7 @@ public enum Role {
     private final Set<String> availablePathRegex = new HashSet<>();
     private boolean canEditData = false;
 
-    private static final Set<String> filterIgnorePaths = Set.of("/auth/.*", "/swagger-ui/.*", "/swagger-resources/.*", "/v3/api-docs/.*");
+    private static final Set<String> filterIgnorePaths = Set.of("/auth/.*", "/swagger-ui/.*", "/swagger-resources/.*", "/v3/api-docs(?:/.*)?");
     static {
         ROLE_ADMIN.children.addAll(List.of(ROLE_POSTS, ROLE_ALBUMS, ROLE_USERS));
         ROLE_USERS.children.add(ROLE_USERS_VIEWER);
