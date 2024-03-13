@@ -18,6 +18,7 @@ public enum Role {
     private final Set<String> availablePathRegex = new HashSet<>();
     private boolean canEditData = false;
 
+    private static final Set<String> filterIgnorePaths = Set.of("/auth/.*", "/swagger-ui/.*", "/swagger-resources/.*", "/v3/api-docs/.*");
     static {
         ROLE_ADMIN.children.addAll(List.of(ROLE_POSTS, ROLE_ALBUMS, ROLE_USERS));
         ROLE_USERS.children.add(ROLE_USERS_VIEWER);
@@ -32,7 +33,7 @@ public enum Role {
         ROLE_USERS_VIEWER.availablePathRegex.add("/users/.*");
         ROLE_POSTS_VIEWER.availablePathRegex.add("/posts(?:/.*)?");
         ROLE_ALBUMS_VIEWER.availablePathRegex.add("/albums/.*");
-        ROLE_DEFAULT.availablePathRegex.add("/auth/.*");
+        ROLE_DEFAULT.availablePathRegex.addAll(filterIgnorePaths);
     }
 
     static {

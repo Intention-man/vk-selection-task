@@ -48,18 +48,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                     return corsConfiguration;
                 }))
                 // Настройка доступа к конечным точкам
-//                .authorizeHttpRequests(request -> request
-//                        // Можно указать конкретный путь, * - 1 уровень вложенности, ** - любое количество уровней вложенности
-//                        .requestMatchers("/users/**")
-//                        .hasAnyRole("USERS", "ADMIN")
-//                        .requestMatchers("/posts/**")
-//                        .hasAnyRole("POSTS", "ADMIN")
-//                        .requestMatchers("/albums/**")
-//                        .hasAnyRole("ALBUMS", "ADMIN")
-//                        .requestMatchers("/auth/**").permitAll()
-//                        .requestMatchers("/swagger-ui/**", "/swagger-resources/*", "/v3/api-docs/**").permitAll()
-//                        .anyRequest().authenticated()
-//                )
+
 //                .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authConfig.authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

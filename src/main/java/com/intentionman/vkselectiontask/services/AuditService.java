@@ -9,33 +9,28 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 public class AuditService {
     private final Set<String> methodsToFilter = Set.of("GET", "POST", "PUT", "PATCH", "DELETE");
-    private final Set<String> filterIgnorePaths = Set.of("/auth/.*");
 
     private final RequestRepositoriy requestRepositoriy;
     /**
      * Проксирование не нужно, если это OPTIONS запрос или запрос с вида /auth/**
      * Остальные случаи - это проксирование
      */
-    public boolean shouldFilter(HttpServletRequest request) {
+    public boolean shouldProxy(HttpServletRequest request) {
         String path = request.getServletPath();
-        if (!methodsToFilter.contains(request.getMethod().toUpperCase()))
+        String method = request.getMethod();
+        if (!methodsToFilter.contains(method.toUpperCase()))
             return false;
-        for (String regPath : filterIgnorePaths) {
-            if (Pattern.matches(regPath, path)) {
-                return false;
-            }
-        }
-        return true;
+        // если запрос доступен ROLE_DEFAULT (то есть всем ролям), не фильтруем
+        return !Role.ROLE_DEFAULT.checkRequestPossibility(method, path);
     }
 
     public void saveRequestDataWithoutToken(HttpServletRequest request) {
-        if (shouldFilter(request)) {
+        if (shouldProxy(request)) {
             saveRequestData(request, false);
         } else {
             saveRequestData(request, true);
