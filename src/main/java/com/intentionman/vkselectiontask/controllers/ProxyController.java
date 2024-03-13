@@ -1,6 +1,9 @@
 package com.intentionman.vkselectiontask.controllers;
 
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -11,17 +14,20 @@ import org.springframework.web.client.RestTemplate;
 public class ProxyController {
     private final RestTemplate restTemplate;
 
+    @Cacheable(value = "proxyCache", key = "#url")
     @GetMapping(value = "**")
     public String getProxy(@RequestAttribute String url) {
         return restTemplate.getForObject(url, String.class);
     }
 
+    @CachePut(value = "proxyCache", key = "#url")
     @PostMapping(value = "**")
     public ResponseEntity<String> postProxy(@RequestAttribute String url, @RequestBody Object dto) {
         ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, dto, String.class);
         return ResponseEntity.ok(responseEntity.getBody());
     }
 
+    @CachePut(value = "proxyCache", key = "#url")
     @PutMapping(value = "**")
     public ResponseEntity<String> putProxy(@RequestAttribute String url, @RequestBody Object dto) {
         HttpHeaders headers = new HttpHeaders();
@@ -31,6 +37,7 @@ public class ProxyController {
         return ResponseEntity.ok(responseEntity.getBody());
     }
 
+    @CacheEvict(value = "proxyCache", key = "#url")
     @DeleteMapping(value = "**")
     public ResponseEntity<HttpStatus> deleteProxy(@RequestAttribute String url) {
         restTemplate.delete(url);

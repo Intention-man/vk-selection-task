@@ -73,7 +73,7 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!--Security-->
+		<!--SECURITY-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
@@ -111,7 +111,14 @@
 			<version>6.2.2</version>
 		</dependency>
 
-		<!-- Утилиты -->
+		<!--CACHE-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+			<version>3.1.5</version>
+		</dependency>
+
+		<!-- UTILS -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
