@@ -30,9 +30,9 @@ public enum Role {
     }
 
     static {
-        ROLE_USERS_VIEWER.availablePathRegex.add("/users/.*");
+        ROLE_USERS_VIEWER.availablePathRegex.add("/users(?:/.*)?");
         ROLE_POSTS_VIEWER.availablePathRegex.add("/posts(?:/.*)?");
-        ROLE_ALBUMS_VIEWER.availablePathRegex.add("/albums/.*");
+        ROLE_ALBUMS_VIEWER.availablePathRegex.add("/albums(?:/.*)?");
         ROLE_DEFAULT.availablePathRegex.addAll(filterIgnorePaths);
     }
 
@@ -48,12 +48,21 @@ public enum Role {
     }
 
     public boolean checkRequestPossibility(String method, String requestPath) {
-        boolean containsRegPath = this.availablePathRegex
+        return canExecuteMethod(method) && checkPathIsAvailable(requestPath);
+    }
+
+    public boolean checkPathIsAvailable(String requestPath){
+        boolean containsRegPath = checkContainsRegPath(requestPath);
+        return containsRegPath || children.stream().anyMatch(r -> r.checkPathIsAvailable(requestPath));
+    }
+
+    public boolean checkContainsRegPath(String requestPath){
+        return this.availablePathRegex
                 .stream()
                 .anyMatch(pathRegex -> Pattern.matches(pathRegex, requestPath));
-        boolean canDoMethod = (method.equals("GET") || this.canEditData);
-        return canDoMethod && (
-                containsRegPath || children.stream().anyMatch(r -> r.checkRequestPossibility(method, requestPath))
-        );
+    }
+
+    public boolean canExecuteMethod(String method){
+        return (method.equals("GET") || this.canEditData);
     }
 }

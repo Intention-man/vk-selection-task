@@ -17,8 +17,11 @@ public class RequestInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        if (response.getStatus() == 403){
+            return false;
+        }
         try {
-            if (auditService.shouldProxy(request)) {
+            if (auditService.checkShouldProxy(request)) {
                 String endpoint = request.getServletPath();
                 request.setAttribute("url", COMMON_PATH + endpoint);
             }

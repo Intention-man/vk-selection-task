@@ -13,7 +13,7 @@ public final class TestDataUtil {
     }
 
     public static UserEntity createTestAdminRole() {
-        return new UserEntity(100L, "admin", "123456", Role.ROLE_ADMIN);
+        return new UserEntity(100L, "sysadmin", "123456", Role.ROLE_ADMIN);
     }
 
     public static UserEntity createTestPostsRole() {
@@ -29,11 +29,11 @@ public final class TestDataUtil {
     }
 
     public static UserEntity createTestDefaultRole() {
-        return new UserEntity(500L, "somebody", "123456", Role.ROLE_POSTS);
+        return new UserEntity(500L, "somebody", "123456", Role.ROLE_DEFAULT);
     }
 
     public static UserEntity createTooShortUser() {
-        return new UserEntity(600L, "short", "pass", Role.ROLE_POSTS);
+        return new UserEntity(600L, "short", "pass", Role.ROLE_DEFAULT);
     }
 
     public static List<UserEntity> createTestUsers() {

@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,16 +20,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.logging.Logger;
 
 
 @Component
 @AllArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    // TODO не пускать в интерцептор, если сделали response.setStatus(403);
     private JwtService jwtService;
     private UserService userService;
     private AuditService auditService;
-    private Logger logger;
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String AUTHORIZATION = "Authorization";
 
@@ -43,8 +43,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Получаем токен из заголовка
         var authHeader = request.getHeader(AUTHORIZATION);
         if (StringUtils.isEmpty(authHeader) || !StringUtils.startsWith(authHeader, BEARER_PREFIX)) {
-            auditService.saveRequestDataWithoutToken(request);
-            canContinue = true;
+            boolean shouldProxy = auditService.checkShouldProxy(request);
+            auditService.saveRequestData(request, !shouldProxy);
+            if (shouldProxy){
+                response.setStatus(403);
+                throw new AccessDeniedException("No token");
+            } else {
+                canContinue = true;
+            }
         } else {
             // Обрезаем префикс и получаем имя пользователя из токена
             var token = authHeader.substring(BEARER_PREFIX.length());
@@ -73,6 +79,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 auditService.saveRequestData(request, hasUserAuthority);
                 if (!hasUserAuthority){
                     response.setStatus(403);
+                    throw new AccessDeniedException("Incorrect token");
                 } else {
                     canContinue = true;
                 }

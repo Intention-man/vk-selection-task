@@ -26,7 +26,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class ProxyControllerIntegrationTest {
+class ProxyControllerIntegrationTest {
     private final AuthService authService;
     private final UserMapper userMapper;
     private final MockMvc mockMvc;
@@ -35,7 +35,7 @@ public class ProxyControllerIntegrationTest {
 
     @BeforeAll
     void setUp() {
-        UserDto testUser = userMapper.entityToUserDto(TestDataUtil.createTestDefaultRole());
+        UserDto testUser = userMapper.entityToUserDto(TestDataUtil.createTestAdminRole());
         token = "Bearer " + authService.signUp(testUser).getToken();
     }
 

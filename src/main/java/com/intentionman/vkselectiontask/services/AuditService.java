@@ -16,21 +16,18 @@ public class AuditService {
     private final Set<String> methodsToFilter = Set.of("GET", "POST", "PUT", "PATCH", "DELETE");
 
     private final RequestRepositoriy requestRepositoriy;
-    /**
-     * Проксирование не нужно, если это OPTIONS запрос или запрос с вида /auth/**
-     * Остальные случаи - это проксирование
-     */
-    public boolean shouldProxy(HttpServletRequest request) {
-        String path = request.getServletPath();
+
+    public boolean checkShouldProxy(HttpServletRequest request) {
         String method = request.getMethod();
+        String path = request.getServletPath();
         if (!methodsToFilter.contains(method.toUpperCase()))
             return false;
         // если запрос доступен ROLE_DEFAULT (то есть всем ролям), не фильтруем
-        return !Role.ROLE_DEFAULT.checkRequestPossibility(method, path);
+        return !Role.ROLE_DEFAULT.checkContainsRegPath(path);
     }
 
     public void saveRequestDataWithoutToken(HttpServletRequest request) {
-        if (shouldProxy(request)) {
+        if (checkShouldProxy(request)) {
             saveRequestData(request, false);
         } else {
             saveRequestData(request, true);
@@ -53,7 +50,6 @@ public class AuditService {
     public boolean checkRoleHasNecessaryAuthority(HttpServletRequest request, String roleName) {
         String method = request.getMethod();
         String path = request.getServletPath();
-
         return Role.valueOf(roleName).checkRequestPossibility(method, path);
     }
 }
