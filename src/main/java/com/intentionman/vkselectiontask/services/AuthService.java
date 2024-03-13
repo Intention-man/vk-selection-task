@@ -59,5 +59,4 @@ public class AuthService {
         return new AuthResponse(token);
     }
 
-
 }

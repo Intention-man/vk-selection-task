@@ -36,24 +36,29 @@ public class AuditService {
 
     public void saveRequestDataWithoutToken(HttpServletRequest request) {
         if (shouldFilter(request)) {
-            requestRepositoriy.save(new RequestAudit(request.getMethod(), request.getServletPath(), false));
+            saveRequestData(request, false);
         } else {
-            requestRepositoriy.save(new RequestAudit(request.getMethod(), request.getServletPath(), true));
+            saveRequestData(request, true);
         }
     }
 
-    public void saveProxyRequestData(HttpServletRequest request, UserDetails userDetails) {
-        boolean hasAuthority = userDetails
+    public void saveRequestData(HttpServletRequest request, boolean hasUserAuthority) {
+        requestRepositoriy.save(new RequestAudit(request.getMethod(), request.getServletPath(), hasUserAuthority));
+    }
+
+    public boolean checkUserHasNecessaryAuthority(HttpServletRequest request, UserDetails userDetails) {
+        return userDetails
                 .getAuthorities()
                 .stream()
                 .anyMatch(
-                        grantedAuthority -> hasNecessaryAuthority(request, grantedAuthority.getAuthority())
+                        grantedAuthority -> checkRoleHasNecessaryAuthority(request, grantedAuthority.getAuthority())
                 );
-        requestRepositoriy.save(new RequestAudit(request.getMethod(), request.getServletPath(), hasAuthority));
     }
 
-    public boolean hasNecessaryAuthority(HttpServletRequest request, String roleName) {
+    public boolean checkRoleHasNecessaryAuthority(HttpServletRequest request, String roleName) {
+        String method = request.getMethod();
         String path = request.getServletPath();
-        return Role.valueOf(roleName).checkRequestPossibility(path);
+
+        return Role.valueOf(roleName).checkRequestPossibility(method, path);
     }
 }

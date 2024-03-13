@@ -1,6 +1,5 @@
 package com.intentionman.vkselectiontask.config;
 
-import com.intentionman.vkselectiontask.repositories.RequestRepositoriy;
 import com.intentionman.vkselectiontask.security.JwtAuthenticationFilter;
 import com.intentionman.vkselectiontask.security.RequestInterceptor;
 import com.intentionman.vkselectiontask.services.AuditService;
@@ -29,11 +28,10 @@ public class SecurityConfig implements WebMvcConfigurer {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final Logger logger;
     private final AuditService auditService;
-    private final RequestRepositoriy requestRepositoriy;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new RequestInterceptor(auditService, requestRepositoriy, logger));
+        registry.addInterceptor(new RequestInterceptor(auditService));
     }
 
     @Bean
@@ -50,18 +48,18 @@ public class SecurityConfig implements WebMvcConfigurer {
                     return corsConfiguration;
                 }))
                 // Настройка доступа к конечным точкам
-                .authorizeHttpRequests(request -> request
-                        // Можно указать конкретный путь, * - 1 уровень вложенности, ** - любое количество уровней вложенности
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/users/**")
-                        .hasAnyRole("USERS", "ADMIN")
-                        .requestMatchers("/posts/**")
-                        .hasAnyRole("POSTS", "ADMIN")
-                        .requestMatchers("/albums/**")
-                        .hasAnyRole("ALBUMS", "ADMIN")
-                        .requestMatchers("/swagger-ui/**", "/swagger-resources/*", "/v3/api-docs/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+//                .authorizeHttpRequests(request -> request
+//                        // Можно указать конкретный путь, * - 1 уровень вложенности, ** - любое количество уровней вложенности
+//                        .requestMatchers("/users/**")
+//                        .hasAnyRole("USERS", "ADMIN")
+//                        .requestMatchers("/posts/**")
+//                        .hasAnyRole("POSTS", "ADMIN")
+//                        .requestMatchers("/albums/**")
+//                        .hasAnyRole("ALBUMS", "ADMIN")
+//                        .requestMatchers("/auth/**").permitAll()
+//                        .requestMatchers("/swagger-ui/**", "/swagger-resources/*", "/v3/api-docs/**").permitAll()
+//                        .anyRequest().authenticated()
+//                )
 //                .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authConfig.authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -39,11 +39,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        logger.warning("JwtAuthenticationFilter");
+        boolean canContinue = false;
         // Получаем токен из заголовка
         var authHeader = request.getHeader(AUTHORIZATION);
         if (StringUtils.isEmpty(authHeader) || !StringUtils.startsWith(authHeader, BEARER_PREFIX)) {
             auditService.saveRequestDataWithoutToken(request);
+            canContinue = true;
         } else {
             // Обрезаем префикс и получаем имя пользователя из токена
             var jwt = authHeader.substring(BEARER_PREFIX.length());
@@ -68,9 +69,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     context.setAuthentication(authToken);
                     SecurityContextHolder.setContext(context);
                 }
-                auditService.saveProxyRequestData(request, userDetails);
+                boolean hasUserAuthority = auditService.checkUserHasNecessaryAuthority(request, userDetails);
+                auditService.saveRequestData(request, hasUserAuthority);
+                if (!hasUserAuthority){
+                    response.setStatus(403);
+                } else {
+                    canContinue = true;
+                }
             }
         }
-        filterChain.doFilter(request, response);
+        // если запрос корректный и прав достаточно, передаем его интерцептору и контроллерам
+        if (canContinue)
+            filterChain.doFilter(request, response);
     }
 }
