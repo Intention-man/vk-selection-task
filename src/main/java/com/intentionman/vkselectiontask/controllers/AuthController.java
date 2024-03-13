@@ -32,7 +32,7 @@ public class AuthController {
 
     @PostMapping("/registration")
     public ResponseEntity<AuthResponse> registration(@RequestBody UserDto userDto) {
-        if (userService.isLoginDataCorrect(userDto))
+        if (userService.isUserExist(userDto))
             return new ResponseEntity<>(HttpStatus.CONFLICT);
 
         AuthResponse authResponse = authService.signUp(userDto);

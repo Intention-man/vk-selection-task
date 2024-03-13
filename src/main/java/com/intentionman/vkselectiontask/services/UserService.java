@@ -5,7 +5,7 @@ import com.intentionman.vkselectiontask.config.UtilConfig;
 import com.intentionman.vkselectiontask.domain.dto.UserDto;
 import com.intentionman.vkselectiontask.domain.entities.Role;
 import com.intentionman.vkselectiontask.domain.entities.UserEntity;
-import com.intentionman.vkselectiontask.mappers.UserMapperImpl;
+import com.intentionman.vkselectiontask.mappers.UserMapper;
 import com.intentionman.vkselectiontask.repositories.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -21,7 +21,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
-    private final UserMapperImpl userMapper;
+    private final UserMapper userMapper;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -57,6 +57,10 @@ public class UserService implements UserDetailsService {
         return false;
     }
 
+    public boolean isUserExist(UserDto userDto){
+        return userRepository.existsByUsername(userDto.getUsername());
+    }
+
     public UserDetails buildDefaultUserDetails() {
         return new UserEntity(0L, "default", "default", Role.ROLE_DEFAULT);
     }
@@ -76,12 +80,10 @@ public class UserService implements UserDetailsService {
      *
      * @return созданный пользователь
      */
-    public UserEntity create(UserEntity user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
-            // Заменить на свои исключения
-            throw new RuntimeException("Пользователь с таким именем уже существует");
+    public void create(UserEntity user) {
+        if (!userRepository.existsByUsername(user.getUsername())) {
+            save(user);
         }
-        return save(user);
     }
 
     /**

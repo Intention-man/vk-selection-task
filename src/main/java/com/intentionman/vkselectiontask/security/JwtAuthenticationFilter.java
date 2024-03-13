@@ -47,8 +47,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             canContinue = true;
         } else {
             // Обрезаем префикс и получаем имя пользователя из токена
-            var jwt = authHeader.substring(BEARER_PREFIX.length());
-            var username = jwtService.extractUserName(jwt);
+            var token = authHeader.substring(BEARER_PREFIX.length());
+            var username = jwtService.extractUserName(token);
 
             if (StringUtils.isNotEmpty(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userService
@@ -56,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .loadUserByUsername(username);
 
                 // Если токен валиден, то аутентифицируем пользователя
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+                if (jwtService.isTokenValid(token, userDetails)) {
                     SecurityContext context = SecurityContextHolder.createEmptyContext();
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
