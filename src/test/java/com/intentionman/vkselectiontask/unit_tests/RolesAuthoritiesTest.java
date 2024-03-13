@@ -2,7 +2,6 @@ package com.intentionman.vkselectiontask.unit_tests;
 
 import com.intentionman.vkselectiontask.domain.entities.Role;
 import lombok.RequiredArgsConstructor;
-import org.junit.BeforeClass;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,22 +22,22 @@ import java.util.Map;
 @AutoConfigureMockMvc
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 class RolesAuthoritiesTest {
-    private final String GET = "GET";
-    private final String POST = "POST";
-    private final String PUT = "PUT";
-    private final String DELETE = "DELETE";
     Map<String, List<FirstRequestRow>> requestRowMap = new HashMap<>();
 
     @BeforeEach
     void setUp() {
-//        requestRowMap.put("ROLE_DEFAULT", List.of(
-//                new FirstRequestRow(GET, "/auth/registration"),
-//                new FirstRequestRow(GET, "/auth/login"),
-//                new FirstRequestRow(GET, "/v3/api-docs/")
-//        ));
-//        requestRowMap.put("ROLE_USERS_VIEWER", List.of(new FirstRequestRow(GET, "/users")));
-//        requestRowMap.put("ROLE_POSTS_VIEWER", List.of(new FirstRequestRow(GET, "/posts")));
-//        requestRowMap.put("ROLE_ALBUMS_VIEWER", List.of(new FirstRequestRow(GET, "/albums")));
+        String GET = "GET";
+        String POST = "POST";
+        String PUT = "PUT";
+        String DELETE = "DELETE";
+        requestRowMap.put("ROLE_DEFAULT", List.of(
+                new FirstRequestRow(GET, "/auth/registration"),
+                new FirstRequestRow(GET, "/auth/login"),
+                new FirstRequestRow(GET, "/v3/api-docs/")
+        ));
+        requestRowMap.put("ROLE_USERS_VIEWER", List.of(new FirstRequestRow(GET, "/users")));
+        requestRowMap.put("ROLE_POSTS_VIEWER", List.of(new FirstRequestRow(GET, "/posts")));
+        requestRowMap.put("ROLE_ALBUMS_VIEWER", List.of(new FirstRequestRow(GET, "/albums")));
         requestRowMap.put("ROLE_USERS", List.of(
                 new FirstRequestRow(POST, "/users"),
                 new FirstRequestRow(POST, "/users/1/posts"),
@@ -53,7 +52,6 @@ class RolesAuthoritiesTest {
                 new FirstRequestRow(POST, "/albums"),
                 new FirstRequestRow(PUT, "/albums/1"),
                 new FirstRequestRow(DELETE, "/albums/1")
-//                new FirstRequestRow(DELETE, "/smth")
         ));
     }
 
@@ -67,8 +65,24 @@ class RolesAuthoritiesTest {
                     throw new Exception("ADMIN can't send: " + row.method + " " + row.path);
             }
         }
-
     }
+
+    @Test
+    void testCorrectAccessStateToEveryRequestForEveryRole() throws Exception {
+        for (Role role : Role.values()) {
+            for (Map.Entry<String, List<FirstRequestRow>> pair : requestRowMap.entrySet()) {
+                Role smallestRoleHavingAccess = Role.valueOf(pair.getKey());
+                List<FirstRequestRow> rows = pair.getValue();
+                for (FirstRequestRow row : rows) {
+                    boolean isIncludeNeededRole = role.includesRole(smallestRoleHavingAccess);
+                    boolean isRequestAllowed = role.checkRequestPossibility(row.method, row.path);
+                    if (isIncludeNeededRole != isRequestAllowed)
+                        throw new Exception(role + " has undefined behavior on " + row.method + " " + row.path);
+                }
+            }
+        }
+    }
+
 
     static class FirstRequestRow {
         String method;

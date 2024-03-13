@@ -25,7 +25,6 @@ import java.io.IOException;
 @Component
 @AllArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    // TODO не пускать в интерцептор, если сделали response.setStatus(403);
     private JwtService jwtService;
     private UserService userService;
     private AuditService auditService;
