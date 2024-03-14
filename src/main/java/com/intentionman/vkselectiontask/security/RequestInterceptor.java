@@ -22,7 +22,7 @@ public class RequestInterceptor implements HandlerInterceptor {
         }
         try {
             if (auditService.checkShouldProxy(request)) {
-                String endpoint = request.getServletPath();
+                String endpoint = auditService.getPath(request);
                 request.setAttribute("url", COMMON_PATH + endpoint);
             }
             return true;

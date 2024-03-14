@@ -94,7 +94,6 @@ public class UserService implements UserDetailsService {
     public UserEntity getByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
-
     }
 
     /**

@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 @Configuration
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity
 @EnableMethodSecurity
 @AllArgsConstructor
 public class SecurityConfig implements WebMvcConfigurer {

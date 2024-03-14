@@ -19,7 +19,7 @@ public class AuditService {
 
     public boolean checkShouldProxy(HttpServletRequest request) {
         String method = request.getMethod();
-        String path = request.getServletPath();
+        String path = getPath(request);
         if (!methodsToFilter.contains(method.toUpperCase()))
             return false;
         // если запрос доступен ROLE_DEFAULT (то есть всем ролям), не фильтруем
@@ -27,10 +27,11 @@ public class AuditService {
     }
 
     public void saveRequestData(HttpServletRequest request, boolean hasUserAuthority) {
-        requestRepositoriy.save(new RequestAudit(request.getMethod(), request.getServletPath(), hasUserAuthority));
+        requestRepositoriy.save(new RequestAudit(request.getMethod(), getPath(request), hasUserAuthority));
     }
 
     public boolean checkUserHasNecessaryAuthority(HttpServletRequest request, UserDetails userDetails) {
+
         return userDetails
                 .getAuthorities()
                 .stream()
@@ -41,7 +42,13 @@ public class AuditService {
 
     public boolean checkRoleHasNecessaryAuthority(HttpServletRequest request, String roleName) {
         String method = request.getMethod();
-        String path = request.getServletPath();
+        String path = getPath(request);
         return Role.valueOf(roleName).checkRequestPossibility(method, path);
+    }
+
+    public String getPath(HttpServletRequest request){
+        return !request.getServletPath().isEmpty()
+                ? request.getServletPath()
+                : request.getPathInfo();
     }
 }

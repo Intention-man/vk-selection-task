@@ -16,8 +16,8 @@ public class ProxyController {
 
     @Cacheable(value = "proxyCache", key = "#url")
     @GetMapping(value = "**")
-    public String getProxy(@RequestAttribute String url) {
-        return restTemplate.getForObject(url, String.class);
+    public ResponseEntity<String> getProxy(@RequestAttribute String url) {
+        return ResponseEntity.ok(restTemplate.getForObject(url, String.class));
     }
 
     @CachePut(value = "proxyCache", key = "#url")
