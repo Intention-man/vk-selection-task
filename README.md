@@ -1,69 +1,88 @@
-# Функционал
+# API Gateway with RBAC and Auditing
 
-1. Серверное приложение выполняет проксирование запросов к сервису https://jsonplaceholder.typicode.com/. Поддерживает методы
-   * GET
-   * POST
-   * PUT
-   * DELETE
+A Spring Boot service that acts as an authenticated proxy layer over an external REST API
+([JSONPlaceholder](https://jsonplaceholder.typicode.com/)), adding role-based access control,
+request auditing and caching.
 
+Built as a selection task for a VK internship.
 
-2. Доступна регистрация и авторизация пользователей.
+**Stack:** Java · Spring Boot · Spring Security · JUnit
 
+---
 
-3. Безопасность основана на ролевой иерархии (8 ролей)
+## What it does
 
-   * ROLE_ADMIN
-     * ROLE_USERS
-       * ROLE_USERS_VIEWER
-     * ROLE_POSTS
-       * ROLE_POSTS_VIEWER
-     * ROLE_ALBUMS
-       * ROLE_ALBUMS_VIEWER
-       
-         * ROLE_DEFAULT (ее права включаются в права всех остальных ролей)
+The service sits between clients and an external API, and adds three layers the original API doesn't have:
 
+| Layer | Purpose |
+|---|---|
+| **Authentication & RBAC** | Token-based auth with an 8-role permission hierarchy |
+| **Auditing** | Every request is persisted with its outcome, including denied ones |
+| **Caching** | Reduces load on the upstream API; invalidation depends on the HTTP method |
 
-4. Реализовано ведение аудита действий. Фиксируются данные о каждом запросе
-   * Время и дата запроса
-   * Метод запроса
-   * Путь запроса (request path)
-   *  Пользователь
-   * Имеет права на выполнение данного запроса или нет
+All four CRUD methods are proxied: `GET`, `POST`, `PUT`, `DELETE`.
 
+---
 
-5. Реализовано кэширование запросов. В зависимости от метода запроса происходит разное действие с кэшем
+## Design notes
 
+**Role hierarchy.** Permissions are modelled as a tree rather than a flat list, so a parent role
+automatically inherits the rights of its children. This keeps authorization rules declarative
+and avoids duplicating grants across roles.
 
-6. Есть интеграционные и unit тесты на разные компоненты приложения
+```
+ROLE_ADMIN
+├── ROLE_USERS
+│   └── ROLE_USERS_VIEWER
+├── ROLE_POSTS
+│   └── ROLE_POSTS_VIEWER
+└── ROLE_ALBUMS
+    └── ROLE_ALBUMS_VIEWER
+        └── ROLE_DEFAULT   // included in every other role
+```
 
+**Auditing.** Each request is recorded with timestamp, HTTP method, path, user and whether the
+user was authorized to perform it. Denied requests are logged as well — this makes the audit log
+usable for detecting unauthorized access attempts, not just for tracing successful traffic.
 
-# Как запускать?
+**Caching.** Read requests are served from the cache when possible; write requests invalidate
+the affected entries, so clients never observe stale data after a mutation.
 
-В resources/application.properties находятся базовые свойства. Дополнительные arguments / VM-options не требуются.
+---
 
-url приложения - localhost:8181/app (он же указан в Postman конфигурации).
+## Getting started
 
+```bash
+./mvnw spring-boot:run
+```
 
-# Как тестировать?
+The application starts at `http://localhost:8181/app`. Default configuration lives in
+`resources/application.properties`; no extra JVM arguments are required.
 
-Открываем файл Endpoints.postman_collection.json в Postman. \
-Кроме эндпоинтов там содержатся локальные переменные url и token.
-Каждый запрос имеет начало пути локальную переменную {{url}}, которая означает localhost:8181/app. 
+### Trying it out
 
-### Регистрация
-Заходим в любой эндпоинт, название которого содержит слово Login (а оставшаяся часть названия - роль).
-Меняем в строке запроса /login на /registration и выполняем запрос.
-Если запрос успешный в теле ответа видим token. Устанавливаем его значение как локальную переменную token
+A Postman collection is included: `Endpoints.postman_collection.json`. It defines two variables —
+`url` (pre-set to the base path) and `token`.
 
-### Авторизация
-То же самое, только с /login.
+1. **Register** — call any `*Login` endpoint with `/login` replaced by `/registration`.
+   The response body contains a token.
+2. **Set the token** — assign it to the `token` collection variable.
+3. **Call the API** — every request already sends `Authorization: {{token}}`.
 
-### Запросы 
-Каждый запрос уже имеет заголовок Authorization с локальной переменной {{token}}. А также тело запроса.
-Отправляем запрос, получаем результат
+To authenticate an existing user, use the `/login` endpoints directly.
 
+---
 
-# Future Feature
+## Testing
 
-**Websocket**
+Unit and integration tests cover the proxying layer, authorization rules, auditing and caching.
 
+```bash
+./mvnw test
+```
+
+---
+
+## Roadmap
+
+- WebSocket support for real-time updates
